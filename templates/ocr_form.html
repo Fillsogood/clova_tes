@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR 텍스트 추출</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4bb543;
+            --background-color: #f0f2f5;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .page-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-2px);
+        }
+
+        h1, h2 {
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .upload-container {
+            text-align: center;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin: 2rem 0;
+            display: inline-block;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .file-input-label i {
+            margin-right: 8px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .submit-button {
+            display: block;
+            width: 200px;
+            margin: 1rem auto;
+            padding: 1rem 2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .result-container {
+            margin-top: 2rem;
+        }
+
+        .result-text {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+            border-left: 4px solid var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .copy-button {
+            display: block;
+            width: 200px;
+            margin: 1.5rem auto;
+            padding: 1rem 2rem;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .copy-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .copy-button i {
+            margin-right: 8px;
+        }
+
+        .main-button-container {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .main-button {
+        display: inline-block;
+        width: 200px;
+        padding: 1rem 2rem;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .main-button:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-2px);
+        box-shadow: var(--box-shadow);
+    }
+
+    .main-button i {
+        margin-right: 8px;
+    }
+
+        .error {
+            color: #dc3545;
+            text-align: center;
+            padding: 1rem;
+            background-color: #ffe3e3;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+        }
+
+        .selected-file-name {
+            margin-top: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* 애니메이션 효과 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-text {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="container">
+            <h1><i class="fas fa-file-alt"></i> 이미지 텍스트 추출</h1>
+            <div class="upload-container">
+                <form action="/ocr/" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            <i class="fas fa-upload"></i> 이미지 선택
+                            <input type="file" name="image" accept="image/*" required onchange="updateFileName(this)">
+                        </label>
+                        <div class="selected-file-name" id="fileName"></div>
+                    </div>
+                    <button type="submit" class="submit-button">
+                        <i class="fas fa-search"></i> 텍스트 추출하기
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {% if texts %}
+        <div class="container result-container">
+            <h2><i class="fas fa-clipboard-list"></i> 추출된 텍스트</h2>
+            <div id="resultArea">
+                {% for text in texts %}
+                    <div class="result-text">{{ text }}</div>
+                {% endfor %}
+            </div>
+            <button class="copy-button" onclick="copyToClipboard()">
+                <i class="fas fa-copy"></i> 전체 텍스트 복사
+            </button>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="container">
+            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const fileName = input.files[0]?.name;
+            document.getElementById('fileName').textContent = fileName || '';
+        }
+
+        function copyToClipboard() {
+            const texts = document.querySelectorAll('.result-text');
+            let allText = '';
+            texts.forEach(text => {
+                allText += text.innerText + '\n';
+            });
+            
+            navigator.clipboard.writeText(allText).then(() => {
+                const copyButton = document.querySelector('.copy-button');
+                copyButton.innerHTML = '<i class="fas fa-check"></i> 복사 완료!';
+                copyButton.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    copyButton.innerHTML = '<i class="fas fa-copy"></i> 전체 텍스트 복사';
+                    copyButton.style.backgroundColor = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('텍스트 복사 실패:', err);
+                alert('텍스트 복사에 실패했습니다.');
+            });
+        }
+    </script>
+
+    <div class="main-button-container">
+        <a href="/" class="main-button">
+            <i class="fas fa-home"></i> 메인페이지로
+        </a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCP API WMS Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1ec800;
+            --hover-color: #19b200;
+            --background-color: #f5f6f7;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .wms-highlight {
+            color: black;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .site-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .site-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 200px;
+            cursor: pointer;
+        }
+
+        .site-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .site-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .site-card:hover::before {
+            width: 6px;
+        }
+
+        .service-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .site-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .site-info {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0.3rem 0;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .alarm-list {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .alarm-list.open {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .site-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>NCP <span class="wms-highlight">WMS Status</span></h1>
+        <p>Web Service Monitoring System</p>
+    </header>
+    <div class="container">
+        <div class="site-grid">
+            {% for site, alarms in grouped_alarms.items() %}
+            <div>
+                <h2 class="category-title" onclick="toggleAlarms('{{ site }}')">{{ site }}</h2>
+                <div class="alarm-list" id="alarms-{{ site }}">
+                    {% for alarm in alarms %}
+                    <div class="site-card">
+                        <a href="{{ alarm.url }}" target="_blank" class="site-info">URL: {{ alarm.url }}</a>
+                        <p class="site-info">이름: {{ alarm.name }}</p>
+                        <p class="site-info">시나리오_ID: {{ alarm.scenario_id }}</p>
+                        <p class="site-info">상태값: {{ alarm.alarm_status }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function toggleAlarms(site) {
+            const alarmList = document.getElementById('alarms-' + site);
+            alarmList.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
