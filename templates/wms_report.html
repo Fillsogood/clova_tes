@@ -157,9 +157,8 @@
                 <div class="alarm-list" id="alarms-{{ site }}">
                     {% for alarm in alarms %}
                     <div class="site-card">
-                        <a href="{{ alarm.url }}" target="_blank" class="site-info">URL: {{ alarm.url }}</a>
+                        <a href="{{ alarm.url }}" target="_blank" class="site-info">{{ alarm.url }}</a>
                         <p class="site-info">이름: {{ alarm.name }}</p>
-                        <p class="site-info">시나리오_ID: {{ alarm.scenario_id }}</p>
                         <p class="site-info">상태값: {{ alarm.alarm_status }}</p>
                     </div>
                     {% endfor %}

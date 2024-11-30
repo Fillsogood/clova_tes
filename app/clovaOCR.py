@@ -19,6 +19,9 @@ router = APIRouter()
 async def ocr_form(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@router.get("/ai", response_class=HTMLResponse)
+async def ocr_form(request: Request):
+    return templates.TemplateResponse("clova_ai.html", {"request": request})
 
 @router.get("/clova-ocr", response_class=HTMLResponse)
 async def ocr_form(request: Request):
