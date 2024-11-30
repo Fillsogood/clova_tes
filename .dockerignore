@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+.mypy_cache/
+.coverage
+.venv/
+.python-version
+
+# Git
+.gitignore
+.git/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# DB
+db.sqlite3
+
+# other
+profile_pictures/
+
+# Docker
+node_modules
+.git
+*.log
