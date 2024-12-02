@@ -77,7 +77,7 @@ async def upload_image(request: Request, image: UploadFile = File(...)):
         if response.status_code == 200:
             try:
                 res = response.json()
-                # Extract all `inferText` values from `fields`
+                # 바디값로부터 inferText 값을 추출`
                 texts = [
                     field.get("inferText")
                     for image in res.get("images", [])
