@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, APIRouter, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import HTTPException
 from dotenv import load_dotenv
+from fastapi.responses import JSONResponse
+from app.dtos.alaram_dto import AlarmRequestDTO, SiteAlarmDTO, AlarmScenarioDTO
 from itertools import groupby
 from operator import itemgetter
 import hmac
@@ -12,8 +12,6 @@ import requests
 import os
 
 load_dotenv()
-router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 # test 관리에서 KPFIS부분은 root계정 api accesskey 및 secretkey 발급했으니 추후에 WMS(web service Monitoring System)만 api key 만들어서 넣기
 # NCP API 인증 정보
 
@@ -50,48 +48,26 @@ def call_ncp_api(access_key, secret_key, method, uri):
         raise HTTPException(status_code=response.status_code, detail=response.text)
     return response.json()
 
-# WMS 값 받아서 html로 보여주는 기능
-@router.get("/wmsReport", response_class=JSONResponse)
-async def root(request: Request):
+
+async def service_get_alarms():
     alarm_data = []
     for i, access_key in enumerate(NCP_ACCESSKEY):
         try:
             scenarios = call_ncp_api(access_key, NCP_SECRETKEY[i], "GET", URI)
             for scenario in scenarios:
-                alarm_data.append({
-                    "site": NCP_SITENAME[i],
-                    "scenario_id": scenario.get("scenarioId"),
-                    "name": scenario.get("name", "Unknown"),
-                    "url": scenario.get("url", "No URL"),
-                    "alarm_status": scenario.get("serviceYn", "Unknown")
-                })
-        except Exception as e:
+                alarm_data.append(AlarmScenarioDTO(
+                    site=NCP_SITENAME[i],
+                    scenario_id=str(scenario.get("scenarioId")),
+                    name=scenario.get("name", "Unknown"),
+                    url=scenario.get("url", "No URL"),
+                    alarm_status=str(scenario.get("serviceYn", "Unknown"))
+                ).dict())
+        except HTTPException as e:
             alarm_data.append({
                 "site": NCP_SITENAME[i],
                 "error": str(e.detail)
             })
-    # 데이터 그룹화
     grouped_alarms = {}
     for key, group in groupby(sorted(alarm_data, key=itemgetter("site")), key=itemgetter("site")):
         grouped_alarms[key] = list(group)
-    return templates.TemplateResponse(
-        "wms_report.html",
-        {
-            "request": request,
-            "grouped_alarms": grouped_alarms
-        }
-    )
-            
-
-
-# api 받은거 json으로 결과값 보는 용도
-@router.get("/api/alarms", response_class=JSONResponse)
-async def api():
-    results = {}
-    for i, access_key in enumerate(NCP_ACCESSKEY):
-        try:
-            scenarios = call_ncp_api(access_key, NCP_SECRETKEY[i], "GET", URI)
-            results[NCP_SITENAME[i]] = scenarios
-        except HTTPException as e:
-            results[NCP_SITENAME[i]] = {"error": e.detail}
-    return JSONResponse(content=results)
+    return grouped_alarms
